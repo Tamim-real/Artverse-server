@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = 3000
 
@@ -33,16 +33,48 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/all-arts', async(req, res)=>{
+    app.get('/all-arts/:id', async (req, res) => {
+  const id = req.params.id;
+  const result = await artCollection.findOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
 
-      const result = await artCollection.insertOne()
+  app.get('/artist-arts/:email', async(req, res)=>{
+    const email = req.params.email;
+
+    try{
+      const count = await artCollection.countDocuments({userEmail : email})
+      res.send({ totalArtworks: count }); 
+    }catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch artworks count" });
+  }
+  })
+
+
+app.get("/myart/:email", async (req, res) => {
+  const email = req.params.email; // will get "tamim3052@gmail.com" after decoding
+  try {
+    const artworks = await artCollection.find({ userEmail: email }).toArray();
+    res.send(artworks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch artworks" });
+  }
+});
+
+
+    app.post('/all-arts', async(req, res)=>{
+      const data = req.body
+      const result = await artCollection.insertOne(data)
+      res.send(result)
     })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
+    
   }
 }
 run().catch(console.dir);
