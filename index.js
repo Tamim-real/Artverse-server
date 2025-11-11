@@ -11,7 +11,7 @@ app.use(express.json());
 
 const uri = "mongodb+srv://artverse-db:yjeOAlbgLE0Zc2ct@nexdev.5cutabm.mongodb.net/?appName=NexDev";
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -22,9 +22,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
+
+    const db = client.db('ArtverseDB')
+    const artCollection = db.collection('artgallery');
+
+    app.get('/all-arts', async(req, res)=>{
+
+      const result = await artCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.post('/all-arts', async(req, res)=>{
+
+      const result = await artCollection.insertOne()
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
