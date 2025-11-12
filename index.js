@@ -29,9 +29,17 @@ async function run() {
 
     app.get('/all-arts', async(req, res)=>{
 
-      const result = await artCollection.find().toArray();
+      const result = await artCollection.find({ visibility: "Public" }).toArray();
       res.send(result)
     })
+
+     app.get('/latest-arts', async(req, res)=>{
+
+      const result = await artCollection.find({ visibility: "Public" }).sort({created_at : -1}).limit(6).toArray();
+      res.send(result)
+    })
+
+
 
     app.get('/all-arts/:id', async (req, res) => {
   const id = req.params.id;
@@ -70,6 +78,38 @@ app.put("/all-arts/:id", async (req, res) => {
 
 
 
+app.put("/all-arts/like/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const email = req.body.email;
+   
+
+    const art = await artCollection.findOne({ _id: new ObjectId(id) });
+   
+
+    art.likes = art.likes || []; 
+    let updatedLikes;
+    if (art.likes.includes(email)) {
+      updatedLikes = art.likes.filter(e => e !== email);
+    } else {
+      updatedLikes = [...art.likes, email]; 
+    }
+
+    await artCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { likes: updatedLikes } }
+    );
+
+    const updatedArt = await artCollection.findOne({ _id: new ObjectId(id) });
+    res.send(updatedArt);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error", error: err.message });
+  }
+});
+
+
+
 
 
   app.get('/artist-arts/:email', async(req, res)=>{
@@ -96,6 +136,12 @@ app.get("/myart/:email", async (req, res) => {
   }
 });
 
+app.delete('/all-arts/:id', async(req, res)=>{
+    const id = req.params.id;
+    const result = await artCollection.deleteOne({ _id: new ObjectId(id) })
+    res.send(result)
+})
+
 
     app.post('/all-arts', async(req, res)=>{
       const data = req.body
@@ -106,7 +152,7 @@ app.get("/myart/:email", async (req, res) => {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
+    
     
   }
 }
