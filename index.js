@@ -39,6 +39,39 @@ async function run() {
   res.send(result);
 });
 
+app.put("/all-arts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid ID format" });
+    }
+
+    const data = req.body;
+
+    
+    if (data._id) delete data._id;
+
+    const filter = { _id: new ObjectId(id) };
+    const update = { $set: data };
+
+    const result = await artCollection.updateOne(filter, update);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send({ message: "Artwork not found" });
+    }
+
+    res.send({ _id: id, ...data });
+  } catch (error) {
+    
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
+
   app.get('/artist-arts/:email', async(req, res)=>{
     const email = req.params.email;
 
@@ -53,7 +86,7 @@ async function run() {
 
 
 app.get("/myart/:email", async (req, res) => {
-  const email = req.params.email; // will get "tamim3052@gmail.com" after decoding
+  const email = req.params.email; 
   try {
     const artworks = await artCollection.find({ userEmail: email }).toArray();
     res.send(artworks);
