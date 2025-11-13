@@ -26,6 +26,7 @@ async function run() {
 
     const db = client.db('ArtverseDB')
     const artCollection = db.collection('artgallery');
+    const myFavorites = db.collection('myfavorites');
 
     app.get('/all-arts', async(req, res)=>{
 
@@ -148,6 +149,27 @@ app.delete('/all-arts/:id', async(req, res)=>{
       const result = await artCollection.insertOne(data)
       res.send(result)
     })
+
+    app.post('/favorites', async(req, res)=>{
+      const data = req.body;
+      const result = await myFavorites.insertOne(data)
+      res.send(result)
+    })
+
+    app.get('/my-favorites', async(req, res)=>{
+      const email = req.query.email
+      const result = await myFavorites.find({ favorite_by : email}).toArray()
+      res.send(result)
+    })
+    app.delete('/my-favorites/:id', async(req, res)=>{
+    const id = req.params.id;
+    console.log("Deleting favorite with ID:", id);
+    const result = await myFavorites.deleteOne({ _id: id })
+    console.log(result);
+    
+    res.send(result)
+})
+
 
     // await client.db("admin").command({ ping: 1 });
     // console.log("Pinged your deployment. You successfully connected to MongoDB!");
