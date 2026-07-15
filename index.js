@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -23,8 +23,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    
+
     await client.connect();
+    console.log("MongoDB Connected");
 
     const db = client.db('ArtverseDB');
     const artCollection = db.collection('artgallery');
@@ -150,12 +151,12 @@ async function run() {
         }
 
         const hasLiked = art.likes && art.likes.includes(email);
-        const updateQuery = hasLiked 
+        const updateQuery = hasLiked
           ? { $pull: { likes: email } }  // Remove email if already liked
           : { $addToSet: { likes: email } }; // Add email if not liked
 
         await artCollection.updateOne({ _id: artId }, updateQuery);
-        
+
         // Return fresh updated document
         const updatedArt = await artCollection.findOne({ _id: artId });
         res.send(updatedArt);
@@ -224,10 +225,10 @@ async function run() {
     app.delete('/my-favorites/:id', async (req, res) => {
       try {
         const { id } = req.params;
-        
+
         // Try searching/deleting with dynamic type matching
-        const query = isValidId(id) 
-          ? { _id: { $in: [id, new ObjectId(id)] } } 
+        const query = isValidId(id)
+          ? { _id: { $in: [id, new ObjectId(id)] } }
           : { _id: id };
 
         const result = await myFavorites.deleteOne(query);
@@ -243,13 +244,13 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Artverse Server API is running smoothly.')
+app.get("/", (req, res) => {
+  res.send("Artverse Server API is running...");
 });
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`Server running on ${port}`);
   });
 }
 
